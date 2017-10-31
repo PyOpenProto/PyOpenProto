@@ -21,8 +21,8 @@ def play_sound_and_trig(stream, sound_data, p_port, trig_value, isi):
 
 
 class Signals(QtCore.QObject):
-    start_sound = QtCore.pyqtSignal()
-    end_sound = QtCore.pyqtSignal()
+    start_stim = QtCore.pyqtSignal()
+    end_stim = QtCore.pyqtSignal()
     end_playframe = QtCore.pyqtSignal()
 
 class Qt_sound_trig(QtCore.QThread):
@@ -65,9 +65,9 @@ class Qt_sound_trig(QtCore.QThread):
             isi = round(row['ISI'] * 10**-3, 3)
             print('isi : ', isi)
             print('Reading {}'.format(row['Stimulus']))
-            self.signals.start_sound.emit()
+            self.signals.start_stim.emit()
             play_sound_and_trig(self.stream, sound_data, self.p_port, trig_value, isi)
-            self.signals.end_sound.emit()
+            self.signals.end_stim.emit()
 
         self.signals.end_playframe.emit()
 
@@ -99,7 +99,6 @@ class PyAudio_protocol():
         self.state = 'Config'
         print('self.state : ', self.state)
 
-
     def start(self):
         self.ThreadSoundTrig.start()
         self.state = 'Running : stim %i %s'.format('trucTODO')
@@ -111,11 +110,10 @@ class PyAudio_protocol():
 
     def stop(self):
         self.ThreadSoundTrig.stop()
-        self.ThreadSoundTrig.signals.end_sound.connect(self.close)
-
-    def close(self):
-        self.stream.close()
         self.state = 'Stopped on stim  %i %s'.format('trucTODO')
+
+    def closeEvent(self, event):
+        self.stream.close()
 
     def get_state(self):
         return self.state

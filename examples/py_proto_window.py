@@ -27,7 +27,7 @@ class PyProto_Window(QtGui.QWidget):
 
     def initialize(self):
         self.proto = pap.PyAudio_protocol()
-        self.proto.ThreadSoundTrig.signals.end_playframe.connect(self.close)
+        self.proto.ThreadSoundTrig.signals.end_playframe.connect(self.stop)
 
     def set_params(self, playframe, num_device, stim_folder):
         self.playframe = playframe
@@ -37,12 +37,17 @@ class PyProto_Window(QtGui.QWidget):
 
     def start(self):
         self.proto.start()
+        self.proto.ThreadSoundTrig.signals.end_playframe.connect(self.prepare_restart)
         self.but_start.setEnabled(False)
         self.but_stop.setEnabled(True)
 
+    def prepare_restart(self):
+        self.but_start.setEnabled(True)
+        self.but_stop.setEnabled(False)
+
     def stop(self):
         self.proto.stop()
-        self.but_start.setEnabled(False)
+        self.but_start.setEnabled(True)
         self.but_stop.setEnabled(False)
 
     def get_signal(self, sig):
