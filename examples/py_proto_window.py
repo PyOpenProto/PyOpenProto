@@ -1,26 +1,26 @@
 
 
-from PyQt4 import QtGui
+from PyQt5 import QtWidgets
 import pandas as pd
 import random
 import numpy as np
 
 import pyaudio_protocol as pap
 
-class PyProto_Window(QtGui.QWidget):
+class PyProto_Window(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
-        self.gridlayout = QtGui.QGridLayout()
+        self.gridlayout = QtWidgets.QGridLayout()
         self.setLayout(self.gridlayout)
 
-        self.but_start = QtGui.QPushButton('Start')
+        self.but_start = QtWidgets.QPushButton('Start')
         self.gridlayout.addWidget(self.but_start)
         self.but_start.clicked.connect(self.start)
         self.but_start.setEnabled(True)
 
-        self.but_stop = QtGui.QPushButton('Stop')
+        self.but_stop = QtWidgets.QPushButton('Stop')
         self.gridlayout.addWidget(self.but_stop)
         self.but_stop.clicked.connect(self.stop)
         self.but_stop.setEnabled(False)
@@ -55,7 +55,7 @@ class PyProto_Window(QtGui.QWidget):
 
 def test_PyProto_Window():
 
-    app = QtGui.QApplication([])
+    app = QtWidgets.QApplication([])
 
     #Params :
     playframe_csv = 'playframe_ex1.csv'

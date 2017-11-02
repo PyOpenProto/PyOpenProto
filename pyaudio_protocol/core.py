@@ -1,6 +1,6 @@
 import os
-from PyQt4 import QtCore
-from PyQt4.Qt import QMutex
+from PyQt5 import QtCore
+from PyQt5.Qt import QMutex
 import soundfile as sf
 import sounddevice as sd
 import parallel
@@ -129,10 +129,10 @@ def test_audioproto():
         Test with playframe and stims given in examples folder.
         Should be run from core.py folder
         '''
-        from PyQt4 import QtGui
+        from PyQt5 import QtWidgets
         import pandas as pd
 
-        app = QtGui.QApplication([])
+        app = QtWidgets.QApplication([])
         proto = PyAudio_protocol()
 
         num_device = 12
@@ -144,7 +144,7 @@ def test_audioproto():
         proto.start()
 
         def close():
-            proto.close()
+            proto.stop()
             app.quit()
 
         proto.ThreadSoundTrig.signals.end_playframe.connect(close)
