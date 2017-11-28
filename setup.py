@@ -21,6 +21,7 @@ setup(
                     'pandas'
                     #'portaudio',
                     #'QtCore', ??
+                    #Rpi.GPIO
                     ],
     author = "A.Corneyllie",
     author_email = "alexandra.corneyllie@cnrs.fr",

@@ -4,7 +4,6 @@ from PyQt5.Qt import QMutex
 import soundfile as sf
 import sounddevice as sd
 import parallel
-#import threading
 import time
 
 
