@@ -1,7 +1,6 @@
 import os
 import soundfile as sf
 import sounddevice as sd
-import parallel
 import time
 
 import RPi.GPIO as GPIO
@@ -30,16 +29,16 @@ def get_GPIO_bool(trig_value, parralel_GPIO):
 
 class sound_trig_Thread(Thread):
     def __init__(self):
-        Thread.__init__(self, running)
+        Thread.__init__(self)
         self.lock = Lock()
         self._running = False
         self.current = 0
 
-    def set_params(self, playframe, stream, stim_folder, dtype, parralel_GPIO):
+    def set_params(self, playframe, stream, stim_folder, sound_dtype, parralel_GPIO):
         self.playframe = playframe
         self.stream = stream
         self.stim_folder = stim_folder
-        self.sound_dtype = dtype
+        self.sound_dtype = sound_dtype
 
         self.parralel_GPIO = parralel_GPIO
         for i in self.parralel_GPIO:
@@ -85,11 +84,12 @@ class PyAudio_protocol_rpi():
         #self.gpio_Button_Thread = gpio_Button_Thread()
         self.sound_trig_Thread = sound_trig_Thread()
         self._running = False
+        self._playing = False
         self.state = 'Init'
         print('self.state : ', self.state)
 
     def set_config(self, playframe, num_device=3, stim_folder='', sample_rate=44100,
-            channels=2, dtype='float32', GPIO_mode = 0,
+            channels=2, sound_dtype='float32', GPIO_mode = 0,
             parralel_GPIO=np.array([29,31,33,16,37,36,18,32], dtype=np.int32),
             butStart_GPIO=7, butStop_GPIO=11):
         '''
@@ -101,8 +101,9 @@ class PyAudio_protocol_rpi():
         self.stim_folder = stim_folder
         self.sample_rate = sample_rate
         self.channels = channels
+        self.sound_dtype = sound_dtype
         self.stream = sd.OutputStream(device = num_device,
-            samplerate = sample_rate, channels=channels, dtype=dtype)
+            samplerate = sample_rate, channels=channels, dtype=sound_dtype)
 
         if GPIO_mode == 0:
             GPIO.setmode(GPIO.BOARD)
@@ -113,7 +114,7 @@ class PyAudio_protocol_rpi():
         self.butStop_GPIO = butStop_GPIO
 
         self.sound_trig_Thread.set_params(self.playframe,
-            self.stream, self.stim_folder, self.dtype, self.parralel_GPIO)
+            self.stream, self.stim_folder, self.sound_dtype, self.parralel_GPIO)
 
         GPIO.setup(self.butStart_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(self.butStop_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -124,39 +125,51 @@ class PyAudio_protocol_rpi():
     def running(self):
         return self._running #do we need a mutex ?
 
+    def playing(self):
+        return self._playing #do we need a mutex ?
+
     def onStartButton(self):
-        if not self.running():
+        if not self._playing():
             self.sound_trig_Thread.start()
-            self._running = True
+            self._playing = True
 
     def onStopButton(self):
-        '''
-        In this case, we want stop button stops all the script and shutdow the rpi
-        '''
-        if self.running():
-            self.sound_trig_Thread.stop()
-            self._running = False
-
-        call("sudo shutdown -h now", shell=True)
+        self.stop()
 
 
     def start(self):
         GPIO.add_event_detect(self.butStart_GPIO, GPIO.RISING)
         GPIO.add_event_detect(self.butStop_GPIO, GPIO.RISING)
         GPIO.add_event_callback(self.butStart_GPIO, self.onStartButton)
-        GPIO.add_event_callback(self.butStop_GPIO, self.butStop_GPIO)
+        GPIO.add_event_callback(self.butStop_GPIO, self.onStopButton)
 
         self.state = 'Running : stim %i %s'.format('trucTODO')
+        self._running = True
         print(self.state)
+        while self.running():
+            time.sleep(0.5)
 
     def pause(self):
         #TODO
         pass
 
     def stop(self):
-        self.ThreadSoundTrig.stop()
-        self.state = 'Stopped on stim  %i %s'.format('trucTODO')
+        '''
+        In this case, we want stop button stops all the process and shutdown the rpi
+        '''
+        GPIO.remove_event_detect(self.butStart_GPIO, GPIO.RISING)
+        GPIO.add_event_detect(self.butStop_GPIO, GPIO.RISING)
+        self._running = False
+
+        if self._playing():
+            self.sound_trig_Thread.stop()
+            self._playing = False*
+
+        #self.state = 'Stopped on stim  %i %s'.format('trucTODO')
         self.stream.close()
+
+        #switch off the rpi
+        call("sudo shutdown -h now", shell=True)
 
     def get_state(self):
         return self.state

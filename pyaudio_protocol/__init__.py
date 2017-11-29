@@ -17,9 +17,8 @@ except ImportError:
 if HAVE_PyQt5:
     from .core_gui import PyAudio_protocol
     print("Gui Mode")
+    from .test_tools import list_audio_device, show_device_sr, test_simple_syncro_parallel
+    from .test_tools import get_sin
 
 if HAVE_GPIO:
     from .core_rpi_nogui import PyAudio_protocol_rpi
-
-from .test_tools import list_audio_device, show_device_sr, test_simple_syncro_parallel
-from .test_tools import get_sin

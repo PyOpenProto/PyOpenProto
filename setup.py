@@ -17,7 +17,7 @@ setup(
                     'numpy',
                     'pandas',
                     'sounddevice',
-                    'pyparallel',
+                    #'pyparallel',
                     'pandas'
                     #'portaudio',
                     #'QtCore', ??
