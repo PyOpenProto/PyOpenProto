@@ -50,11 +50,11 @@ class sound_trig_Thread(Thread):
             return self._running
 
     def run(self):
-        with lock:
+        with self.lock:
             self.running = True
 
         for index, row in self.playframe.iterrows():   #playframe.iloc[self.current:]
-            with lock:
+            with self.lock:
                 if not self.running:
                     self.current = index
                     print('Stopped at index ' + str(self.current))
@@ -71,7 +71,7 @@ class sound_trig_Thread(Thread):
             play_sound_and_trig_rpi(self.stream, sound_data, GPIO_trigOn, isi)
 
     def stop(self):
-        with lock:
+        with self.lock:
             self._running = False
         self.stream.abort()
 
@@ -88,7 +88,7 @@ class PyAudio_protocol_rpi():
         self.state = 'Init'
         print('self.state : ', self.state)
 
-    def set_config(self, playframe, num_device=3, stim_folder='', sample_rate=44100,
+    def set_config(self, playframe, num_device=2, stim_folder='', sample_rate=44100,
             channels=2, sound_dtype='float32', GPIO_mode = 0,
             parralel_GPIO=np.array([29,31,33,16,37,36,18,32], dtype=np.int32),
             butStart_GPIO=7, butStop_GPIO=11):
@@ -128,12 +128,12 @@ class PyAudio_protocol_rpi():
     def playing(self):
         return self._playing #do we need a mutex ?
 
-    def onStartButton(self):
-        if not self._playing():
+    def onStartButton(self, numGPIO):
+        if not self.playing():
             self.sound_trig_Thread.start()
             self._playing = True
 
-    def onStopButton(self):
+    def onStopButton(self, numGPIO):
         self.stop()
 
 
@@ -157,13 +157,13 @@ class PyAudio_protocol_rpi():
         '''
         In this case, we want stop button stops all the process and shutdown the rpi
         '''
-        GPIO.remove_event_detect(self.butStart_GPIO, GPIO.RISING)
-        GPIO.add_event_detect(self.butStop_GPIO, GPIO.RISING)
+        GPIO.remove_event_detect(self.butStart_GPIO)
+        GPIO.remove_event_detect(self.butStop_GPIO)
         self._running = False
 
-        if self._playing():
+        if self.playing():
             self.sound_trig_Thread.stop()
-            self._playing = False*
+            self._playing = False
 
         #self.state = 'Stopped on stim  %i %s'.format('trucTODO')
         self.stream.close()
@@ -183,18 +183,26 @@ class PyAudio_protocol_rpi():
 def test_audioproto():
         '''
         Test with playframe and stims given in examples folder.
-        Should be run from core.py folder
+        Should be run from core_rpi_nogui.py folder
         '''
         import pandas as pd
 
         proto = PyAudio_protocol()
 
-        num_device = 12
+        num_device = 2
         playframe_csv = './../examples/playframe_ex1.csv'
         playframe = pd.read_csv(playframe_csv)
         stim_folder = './../examples/stims_ex/'
+        sample_rate = 44100
+        channels = 2
+        sound_dtype='float32'
+        GPIO_mode = 0
+        parralel_GPIO = np.array([29,31,33,16,37,36,18,32], dtype=np.int32)
+        butStart_GPIO = 7
+        butStop_GPIO = 11
 
-        proto.set_config(playframe=playframe, num_device=num_device, stim_folder=stim_folder)
+        proto.set_config(playframe, num_device, stim_folder, sample_rate, channels,
+            sound_dtype, GPIO_mode, parralel_GPIO, butStart_GPIO, butStop_GPIO)
         proto.start()
 
 
