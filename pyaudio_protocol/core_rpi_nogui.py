@@ -9,21 +9,9 @@ from threading import Thread, Lock
 from subprocess import call
 
 
-def play_sound_and_trig_rpi(stream, sound_data, GPIO_trigOn, isi):
-    stream.start()
-    GPIO.output(GPIO_trigOn,1)
-    stream.write(sound_data)
-    stream.stop()
-    GPIO.output(GPIO_trigOn, 0)
-    time.sleep(isi)
-    #a trigger is view when there is a voltage change
-    #on the parallel port, so no need to reset it fast.
-
 def get_GPIO_bool(trig_value, parralel_GPIO):
     bool_filter = np.array(np.array(list('{0:08b}'.format(trig_value))), dtype=bool)
     GPIO_trigOn = parralel_GPIO[bool_filter].tolist()
-    print(GPIO_trigOn)
-    print(type(GPIO_trigOn))
     return GPIO_trigOn
 
 
@@ -34,19 +22,18 @@ class sound_trig_Thread(Thread):
         self._running = False
         self.current = 0
 
-    def set_params(self, playframe, stream, stim_folder, sound_dtype,
-                parralel_GPIO, LEDState_GPIO):
+    def set_params(self, playframe, stream, stim_folder, sound_dtype, config_GPIO):
         self.playframe = playframe
         self.stream = stream
         self.stim_folder = stim_folder
         self.sound_dtype = sound_dtype
 
-        self.parralel_GPIO = parralel_GPIO
+        self.parralel_GPIO = config_GPIO['parralel']
         for i in self.parralel_GPIO:
             GPIO.setup(i.item(), GPIO.OUT)
             GPIO.output(i.item(), GPIO.LOW)
 
-        self.LEDState_GPIO = LEDState_GPIO
+        self.LEDState_GPIO = config_GPIO['LED_State']
 
     def running(self):
         with self.lock:
@@ -84,26 +71,29 @@ class sound_trig_Thread(Thread):
             trig_value = row['Trigger']
             GPIO_trigOn = get_GPIO_bool(trig_value, self.parralel_GPIO)
             isi = round(row['ISI'] * 10**-3, 3)
-            print('isi : ', isi)
             print('Reading {}'.format(row['Stimulus']))
 
-            #play_sound_and_trig_rpi(self.stream, sound_data, GPIO_trigOn, isi)
             try:
                 self.stream.start()
                 GPIO.output(GPIO_trigOn,1)
                 self.stream.write(sound_data)
                 self.stream.stop()
-                GPIO.output(GPIO_trigOn, 0)
-                time.sleep(isi)
-            except ValueError:
-                print(ValueError)
+            except sd.PortAudioError:
+                print('catch Exception :')
+                print(sd.PortAudioError)
+                return
+            except :
+                return
+
+            GPIO.output(GPIO_trigOn, 0)
+            print('isi : ', isi)
+            time.sleep(isi)
 
         GPIO.output(self.LEDState_GPIO[4], GPIO.HIGH)
 
     def stop(self):
         with self.lock:
             self._running = False
-        #rais sd.CallbackAbord() ??
         self.stream.abort()
 
 
@@ -111,7 +101,7 @@ class sound_trig_Thread(Thread):
 #TODO graph d'etat
 class PyAudio_protocol_rpi():
 
-    _config_GPIO = { 'mode':0,  #0 BOARD 1 BCM
+    config_GPIO = { 'mode':0,  #0 BOARD 1 BCM
             'parralel':np.array([29,31,33,16,37,36,18,32], dtype=np.int32),
             #'parralel':np.array([29,31,33,35,37,36,38,40], dtype=np.int32)    #basic rpi
             'butStart':7,
@@ -121,8 +111,7 @@ class PyAudio_protocol_rpi():
     }
 
     def __init__(self, parent = None):
-        GPIO.setmode(GPIO.BOARD)
-        #self.gpio_Button_Thread = gpio_Button_Thread()
+        #GPIO.setmode(GPIO.BOARD)
         self.sound_trig_Thread = sound_trig_Thread()
         self._running = False
         self._playing = False
@@ -142,32 +131,31 @@ class PyAudio_protocol_rpi():
         self.stream = sd.OutputStream(device = num_device,
             samplerate = sample_rate, channels=channels, dtype=sound_dtype)
 
-        if self._config_GPIO['mode'] == 0:
+        if self.config_GPIO['mode'] == 0:
             GPIO.setmode(GPIO.BOARD)
         else:
             GPIO.setmode(GPIO.BCM)
         #GPIO.setwarnings(False)
 
-        self.parralel_GPIO = self._config_GPIO['parralel']
-        self.butStart_GPIO = self._config_GPIO['butStart']
-        self.butStop_GPIO = self._config_GPIO['butStop']
-        #self.LEDStart_GPIO = self._config_GPIO['LED_Start']
-        self.LEDState_GPIO = self._config_GPIO['LED_State']
+        #self.parralel_GPIO = self.config_GPIO['parralel']
+        #self.butStart_GPIO = self.config_GPIO['butStart']
+        #self.butStop_GPIO = self.config_GPIO['butStop']
+        #self.LEDStart_GPIO = self.config_GPIO['LED_Start']
+        #self.LEDState_GPIO = self.config_GPIO['LED_State']
 
         self.sound_trig_Thread.set_params(self.playframe,
-            self.stream, self.stim_folder, self.sound_dtype, self.parralel_GPIO,
-            self.LEDState_GPIO)
+            self.stream, self.stim_folder, self.sound_dtype, self.config_GPIO)
 
-        GPIO.setup(self.butStart_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(self.butStop_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(self._config_GPIO['LED_Start'],GPIO.OUT)
-        [GPIO.setup(ii,GPIO.OUT) for ii in self._config_GPIO['LED_State']]
+        GPIO.setup(self.config_GPIO['butStart'], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.config_GPIO['butStop'], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.config_GPIO['LED_Start'],GPIO.OUT)
+        [GPIO.setup(ii,GPIO.OUT) for ii in self.config_GPIO['LED_State']]
 
         self.state = 'Config'
         print('self.state : ', self.state)
 
     def running(self):
-        return self._running #do we need a mutex ?
+        return self._running
 
     def playing(self):
         return self._playing #do we need a mutex ?
@@ -186,15 +174,15 @@ class PyAudio_protocol_rpi():
 
 
     def start(self):
-        GPIO.add_event_detect(self.butStart_GPIO, GPIO.RISING)
-        GPIO.add_event_detect(self.butStop_GPIO, GPIO.RISING)
-        GPIO.add_event_callback(self.butStart_GPIO, self.onStartButton)
-        GPIO.add_event_callback(self.butStop_GPIO, self.onStopButton)
+        GPIO.add_event_detect(self.config_GPIO['butStart'], GPIO.RISING)
+        GPIO.add_event_detect(self.config_GPIO['butStop'], GPIO.RISING)
+        GPIO.add_event_callback(self.config_GPIO['butStart'], self.onStartButton)
+        GPIO.add_event_callback(self.config_GPIO['butStop'], self.onStopButton)
 
         self.state = 'Running : stim %i %s'.format('trucTODO')
         self._running = True
         print(self.state)
-        GPIO.output(self._config_GPIO['LED_Start'],GPIO.HIGH)
+        GPIO.output(self.config_GPIO['LED_Start'],GPIO.HIGH)
         while self.running():
             time.sleep(0.5)
 
@@ -206,20 +194,20 @@ class PyAudio_protocol_rpi():
         '''
         In this case, we want stop button stops all the process and shutdown the rpi
         '''
-        GPIO.remove_event_detect(self.butStart_GPIO)
-        GPIO.remove_event_detect(self.butStop_GPIO)
-        GPIO.output(self._config_GPIO['LED_Start'],GPIO.LOW)
+        print('Stopping')
+        GPIO.remove_event_detect(self.config_GPIO['butStart'])
+        GPIO.remove_event_detect(self.config_GPIO['butStop'])
+        GPIO.output(self.config_GPIO['LED_Start'],GPIO.LOW)
         self._running = False
 
         if self.playing():
             self.sound_trig_Thread.stop()
             self._playing = False
-            [GPIO.output(ii,GPIO.LOW) for ii in self._config_GPIO['LED_State']]
+            [GPIO.output(ii,GPIO.LOW) for ii in self.config_GPIO['LED_State']]
 
-        #self.state = 'Stopped on stim  %i %s'.format('trucTODO')
         self.stream.close()
-        #time.sleep(2)
 
+        print('everything is closed, could shutdown rpi')
         #switch off the rpi
         #call("sudo shutdown -h now", shell=True)
 
@@ -241,7 +229,7 @@ def test_audioproto():
 
         proto = PyAudio_protocol()
 
-        num_device = 2
+        num_device = 5
         playframe_csv = './../examples/playframe_ex1.csv'
         playframe = pd.read_csv(playframe_csv)
         stim_folder = './../examples/stims_ex/'
