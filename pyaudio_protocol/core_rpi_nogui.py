@@ -8,6 +8,9 @@ import numpy as np
 from threading import Thread, Lock
 from subprocess import call
 
+import logging
+logger = logging.getLogger()
+
 
 def get_GPIO_bool(trig_value, parralel_GPIO):
     bool_filter = np.array(np.array(list('{0:08b}'.format(trig_value))), dtype=bool)
@@ -52,7 +55,7 @@ class sound_trig_Thread(Thread):
         for index, row in self.playframe.iterrows():   #playframe.iloc[self.current:]
             if not self.running():
                 self.current = index
-                print('Stopped at index ' + str(self.current))
+                logger.info('Stopped at index ' + str(self.current))
                 break
 
             if index > round(nb_items/4) and Led1 == 0:
@@ -65,13 +68,13 @@ class sound_trig_Thread(Thread):
                 GPIO.output(self.LEDState_GPIO[3], GPIO.HIGH)
                 Led3 = 1
 
-            print('index : ', index)
+            logger.debug('index : ', index)
             sound_data, sample_rate = sf.read(self.stim_folder + row['Stimulus'] + '.wav')
             sound_data = sound_data.astype(self.sound_dtype) #TODO why sounds are in float64 ??
             trig_value = row['Trigger']
             GPIO_trigOn = get_GPIO_bool(trig_value, self.parralel_GPIO)
             isi = round(row['ISI'] * 10**-3, 3)
-            print('Reading {}'.format(row['Stimulus']))
+            logger.info('Reading {}'.format(row['Stimulus']))
 
             try:
                 self.stream.start()
@@ -79,14 +82,14 @@ class sound_trig_Thread(Thread):
                 self.stream.write(sound_data)
                 self.stream.stop()
             except sd.PortAudioError:
-                print('catch Exception :')
-                print(sd.PortAudioError)
+                logger.warning('catch Exception :')
+                logger.warning(sd.PortAudioError)
                 return
             except :
                 return
 
             GPIO.output(GPIO_trigOn, 0)
-            print('isi : ', isi)
+            logger.info('isi : ', isi)
             time.sleep(isi)
 
         GPIO.output(self.LEDState_GPIO[4], GPIO.HIGH)
@@ -116,7 +119,7 @@ class PyAudio_protocol_rpi():
         self._running = False
         self._playing = False
         self.state = 'Init'
-        print('self.state : ', self.state)
+        logger.info('self.state : ', self.state)
 
     def set_config(self, playframe, num_device=5, stim_folder='', sample_rate=44100,
             channels=2, sound_dtype='float32'):
@@ -152,7 +155,7 @@ class PyAudio_protocol_rpi():
         [GPIO.setup(ii,GPIO.OUT) for ii in self.config_GPIO['LED_State']]
 
         self.state = 'Config'
-        print('self.state : ', self.state)
+        logger.info('self.state : ', self.state)
 
     def running(self):
         return self._running
@@ -161,15 +164,15 @@ class PyAudio_protocol_rpi():
         return self._playing #do we need a mutex ?
 
     def onStartButton(self, numGPIO):
-        print('press start')
+        logger.debug('press start')
         if not self.playing():
-            print('started')
+            logger.debug('started')
             self.sound_trig_Thread.start()
             self._playing = True
 
 
     def onStopButton(self, numGPIO):
-        print('Stopped')
+        logger.debug('Stopped')
         self.stop()
 
 
@@ -181,7 +184,7 @@ class PyAudio_protocol_rpi():
 
         self.state = 'Running : stim %i %s'.format('trucTODO')
         self._running = True
-        print(self.state)
+        logger.debug(self.state)
         GPIO.output(self.config_GPIO['LED_Start'],GPIO.HIGH)
         while self.running():
             time.sleep(0.5)
@@ -194,7 +197,7 @@ class PyAudio_protocol_rpi():
         '''
         In this case, we want stop button stops all the process and shutdown the rpi
         '''
-        print('Stopping')
+        logger.debug('Stopping')
         GPIO.remove_event_detect(self.config_GPIO['butStart'])
         GPIO.remove_event_detect(self.config_GPIO['butStop'])
         GPIO.output(self.config_GPIO['LED_Start'],GPIO.LOW)
@@ -207,7 +210,7 @@ class PyAudio_protocol_rpi():
 
         self.stream.close()
 
-        print('everything is closed, could shutdown rpi')
+        logger.info('everything is closed, could shutdown rpi')
         #switch off the rpi
         #call("sudo shutdown -h now", shell=True)
 
