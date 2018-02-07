@@ -105,12 +105,12 @@ class sound_trig_Thread(Thread):
 class PyAudio_protocol_rpi():
 
     config_GPIO = { 'mode':0,  #0 BOARD 1 BCM
-            'parralel':np.array([32,18,36,37,16,33,31,29], dtype=np.int32), #Correspondance port // [9,8,7,...,2]
+            'parralel':np.array([32,18,36,37,16,33,23,21], dtype=np.int32), #Correspondance port // [9,8,7,...,2]
             #'parralel':np.array([29,31,33,35,37,36,38,40], dtype=np.int32)    #basic rpi
             'butStart':7,
             'butStop':11,
             'LED_Start':22,
-            'LED_State':[13,15,19,21,23]
+            'LED_State':[13,15,19,29,31]
     }
 
     def __init__(self, parent = None):
