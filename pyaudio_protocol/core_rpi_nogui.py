@@ -173,7 +173,13 @@ class PyAudio_protocol_rpi():
 
     def onStopButton(self, numGPIO):
         logger.debug('Stopped')
-        self.stop()
+        when_pressed = time.time()
+        while GPIO.input(self.config_GPIO['butStop']):
+            time.sleep(0.001)
+            pass
+        time_pressed = time.time() - when_pressed
+        if time_pressed > 2:
+            self.stop()
 
 
     def start(self):
