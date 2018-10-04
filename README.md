@@ -1,8 +1,11 @@
 
-This project aims to propose flexible soft and hardware to run experiments that needs a high timing acuraty to synchronise different equipments.
-For example, we developp this project for neuroscience research to get the best synchonisation between the presentation of audio stimuli with cerebral activity recording (EEG). This kind of experiment needs to be at milisec precision.
+The StimPunc project aims to propose shareable, easy making and using softs and hardwares to play stimuli with high quality and timing acuraty.
+
+This project is developped for instance to run experiments in neuroscience research. In this area, a high precision (ms) is needed between stimulation and recording equipement.
+
 
 For now, the existing solutions are :
 
 ## pyaudio_protocol
-Pure python audio stimulation coupled with parallel port syncronisation trigger. Could be used on a regular computer (that has a parralel port) or with the stimBox solution we made, based on a RaspberryPi. Please find the stimBox documentation here (comming soon). 
+Pure python audio stimulation player coupled with parallel port syncronisation trigger. Used for audio experiment coupled with EEG recording. Uses a 'playframe' as the experiment guideline whch is extern from the generique player engine.
+Could be used on a regular computer (that has a parralel port) or with the stimBox solution we made, based on a RaspberryPi. Associated stimBox documentation comming soon... 
