@@ -6,6 +6,6 @@ This project is developped for instance to run experiments in neuroscience resea
 
 For now, the existing solutions are :
 
-## pyaudio_protocol
+## pyaudio_protocol & StimBox_v1
 Pure python audio stimulation player coupled with parallel port syncronisation trigger. Used for audio experiment coupled with EEG recording. Uses a 'playframe' as the experiment guideline whch is extern from the generique player engine.
 Could be used on a regular computer (that has a parralel port) or with the stimBox solution we made, based on a RaspberryPi. Associated stimBox documentation comming soon... 
