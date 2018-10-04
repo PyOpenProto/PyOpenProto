@@ -1,5 +1,5 @@
 
-The StimPunc project aims to propose shareable, easy making and using softs and hardwares to play stimuli with high quality and timing acuraty.
+The StimPunc project aims to propose shareable, easy making and using softs and hardwares to play stimuli with high quality and timing accuracy.
 
 This project is developped for instance to run experiments in neuroscience research. In this area, a high precision (ms) is needed between stimulation and recording equipement.
 
