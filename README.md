@@ -1,3 +1,5 @@
+## PyOpenProto project
+
 PyOpenProto project propose shareable, easy making and using softs and hardwares to play stimuli with high quality and timing accuracy.
 The aim of this project is to contribute to standardise simple and efficient neuroscience protocol player solution (hardware + software) and make it accessible to a wide experiment context (from fundamental research to clinic).
 
