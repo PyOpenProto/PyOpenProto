@@ -9,6 +9,6 @@ For now, the existing solutions are :
 
 ## pyaudio_protocol
 Pure python audio stimulation player coupled with parallel port syncronisation trigger. 
-Two versions are available : one running on a regular computer (that has a parralel port) or one with the StimBox harware solution we made, based on a RaspberryPi. Documentation of the StimBox #TODO
+Two versions are available : one running on a regular computer (that has a LPT port, known as 'parralel port') or one with the StimulationBox harware solution we made, based on a RaspberryPi. Documentation of the StimBox #TODO
 Used for audio experiment coupled with EEG recording. Uses a 'playframe' as the experiment guideline which is extern from the generique player engine.
 
