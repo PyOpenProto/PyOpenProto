@@ -9,6 +9,14 @@ For now, the existing solutions are :
 
 ## pyaudio_protocol
 Pure python audio stimulation player coupled with parallel port syncronisation trigger. 
-Two versions are available : one running on a regular computer (that has a LPT port, known as 'parralel port') or one with the StimulationBox harware solution we made, based on a RaspberryPi. Documentation of the StimBox #TODO
-Used for audio experiment coupled with EEG recording. Uses a 'playframe' as the experiment guideline which is extern from the generique player engine.
+Two versions are available : one running on a regular computer (that has a LPT port, known as 'parralel port') and one with the StimulationBox harware solution we made, based on a RaspberryPi, as described below.
+Pyaudio_protocol is used for audio experiment coupled with EEG recording. Uses a 'playframe' as the experiment guideline which is extern from the generique player engine.
+
+## Stimulation box hardware
+Pyaudio_protocol could be used with an open hardware stimulation box, easy to make and employ, inexpensive and allowing hight timming control and sound acuracy.
+You can command a ready-to-use box to the Hemisphere company (bonjour@hemisphere-project.com) or do it yourself.
+To creat a box you will need :
+- raspberry pi 3 model B
+- hifiberry DAC+ pro  
+- to be continued..
 
