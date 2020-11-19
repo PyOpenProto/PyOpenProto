@@ -6,6 +6,14 @@ import sounddevice as sd
 import parallel
 import time
 
+'''
+This code is the one used on a regilar computer.
+It need a parrallel port.
+You have to adapt the num_device used (line 145) corresponding to your setup.
+You can use list_audio_device() from test_tools.py to see the one corresponding
+to Alsa mixer
+
+'''
 
 def play_sound_and_trig(stream, sound_data, p_port, trig_value, isi):
     stream.start()
@@ -26,9 +34,9 @@ class Signals(QtCore.QObject):
 
 class Qt_sound_trig(QtCore.QThread):
     '''
-    On joue le son dans un stream unique pour la Classe
-    via un thread car la methode write est blockante
-    (enfin suivant le device/backend choisi)
+    Play the sound in a unique stream for the class
+    with a thread because write is a blocking method
+    (depend on device/backend choosen)
     '''
     def __init__(self):
         QtCore.QThread.__init__(self)
@@ -59,7 +67,7 @@ class Qt_sound_trig(QtCore.QThread):
             self.mutex.unlock()
             print('index : ', index)
             sound_data, sample_rate = sf.read(self.stim_folder + row['Stimulus'] + '.wav')
-            sound_data = sound_data.astype(self.sound_dtype) #TODO why sounds are in float64 ??
+            sound_data = sound_data.astype(self.sound_dtype)
             trig_value = row['Trigger']
             isi = round(row['ISI'] * 10**-3, 3)
             print('isi : ', isi)
@@ -100,16 +108,16 @@ class PyAudio_protocol():
 
     def start(self):
         self.ThreadSoundTrig.start()
-        self.state = 'Running : stim %i %s'.format('trucTODO')
+        self.state = 'Running'
         print(self.state)
 
     def pause(self):
-        #TODO
+        #TODO for v0.3
         pass
 
     def stop(self):
         self.ThreadSoundTrig.stop()
-        self.state = 'Stopped on stim  %i %s'.format('trucTODO')
+        self.state = 'Stopped'
 
     def closeEvent(self, event):
         self.stream.close()
@@ -118,7 +126,7 @@ class PyAudio_protocol():
         return self.state
 
     def save_results(self):
-        #TODO
+        #TODO for v0.3
         pass
 
 

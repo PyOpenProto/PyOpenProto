@@ -17,18 +17,18 @@ setup(
                     'numpy',
                     'pandas',
                     'sounddevice',
-                    #'pyparallel',
+                    'pyparallel',
                     'pandas'
                     #'portaudio',
-                    #'QtCore', ??
-                    #Rpi.GPIO
+                    #'QtCore', #For core_gui.py - recular computer
+                    #Rpi.GPIO # For core_rpi_nogui - Stimulation box
                     ],
-    author = "A.Corneyllie",
-    author_email = "alexandra.corneyllie@cnrs.fr",
+    author = "Anonymous", #for review
+    author_email = "Anonymous", #for review
     description = "Simple module for playing audio research protocol.",
     long_description = long_description,
     license = "BSD",
-    #url='https://github.com/pyaudio_protocol',
+    #url=' ', #for review
     classifiers = [
         'Development Status :: 1 - Beta',
         'Intended Audience :: Science/Research',

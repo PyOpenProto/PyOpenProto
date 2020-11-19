@@ -8,6 +8,13 @@ import numpy as np
 from threading import Thread, Lock
 from subprocess import call
 
+'''
+This code is the one used on the Raspberry Pi box (no gui)
+
+'''
+
+
+
 import logging
 logger = logging.getLogger()
 
@@ -70,7 +77,7 @@ class sound_trig_Thread(Thread):
 
             logger.debug('index : ', index)
             sound_data, sample_rate = sf.read(self.stim_folder + row['Stimulus'] + '.wav')
-            sound_data = sound_data.astype(self.sound_dtype) #TODO why sounds are in float64 ??
+            sound_data = sound_data.astype(self.sound_dtype)
             trig_value = row['Trigger']
             GPIO_trigOn = get_GPIO_bool(trig_value, self.parralel_GPIO)
             isi = round(row['ISI'] * 10**-3, 3)
@@ -100,13 +107,12 @@ class sound_trig_Thread(Thread):
         self.stream.abort()
 
 
-#TODO LOG
-#TODO graph d'etat
+#TODO v0.3 : LOG + state graph
 class PyAudio_protocol_rpi():
 
     config_GPIO = { 'mode':0,  #0 BOARD 1 BCM
             'parralel':np.array([32,18,36,37,16,33,23,21], dtype=np.int32), #Correspondance port // [9,8,7,...,2]
-            #'parralel':np.array([29,31,33,35,37,36,38,40], dtype=np.int32)    #basic rpi
+            #'parralel':np.array([29,31,33,35,37,36,38,40], dtype=np.int32) #basic rpi
             'butStart':7,
             'butStop':11,
             'LED_Start':22,
@@ -138,13 +144,6 @@ class PyAudio_protocol_rpi():
             GPIO.setmode(GPIO.BOARD)
         else:
             GPIO.setmode(GPIO.BCM)
-        #GPIO.setwarnings(False)
-
-        #self.parralel_GPIO = self.config_GPIO['parralel']
-        #self.butStart_GPIO = self.config_GPIO['butStart']
-        #self.butStop_GPIO = self.config_GPIO['butStop']
-        #self.LEDStart_GPIO = self.config_GPIO['LED_Start']
-        #self.LEDState_GPIO = self.config_GPIO['LED_State']
 
         self.sound_trig_Thread.set_params(self.playframe,
             self.stream, self.stim_folder, self.sound_dtype, self.config_GPIO)
@@ -161,7 +160,7 @@ class PyAudio_protocol_rpi():
         return self._running
 
     def playing(self):
-        return self._playing #do we need a mutex ?
+        return self._playing #could be a mutex ?
 
     def onStartButton(self, numGPIO):
         logger.debug('press start')
@@ -196,7 +195,7 @@ class PyAudio_protocol_rpi():
             time.sleep(0.5)
 
     def pause(self):
-        #TODO
+        #TODO v0.3
         pass
 
     def stop(self):
@@ -224,7 +223,7 @@ class PyAudio_protocol_rpi():
         return self.state
 
     def save_results(self):
-        #TODO
+        #TODO v0.3
         pass
 
 
@@ -238,7 +237,7 @@ def test_audioproto():
 
         proto = PyAudio_protocol()
 
-        num_device = 5
+        num_device = 5  # HifiBerry device
         playframe_csv = './../examples/playframe_ex1.csv'
         playframe = pd.read_csv(playframe_csv)
         stim_folder = './../examples/stims_ex/'

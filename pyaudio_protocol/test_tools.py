@@ -8,6 +8,8 @@ def list_audio_device():
     '''
     List audio devices
     Advice : select Alsa default mixer
+    The audio_device number have to be given in core_gui.py corresponding to
+    the one you wants to use on your computer
     '''
     print('Devices : ')
     print(sd.query_devices())
