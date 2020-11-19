@@ -8,20 +8,24 @@ import random
 nb_subject = 1
 
 # Let say we will play this list of stimulations
-# corresponding to stim1.wav, stim2.wav, stim3.wav
-play_list = ['stim1', 'stim2', 'stim3']
+# corresponding to PPD70.wav, APD71.wav, APD72.wav
+play_list = ['PPD70', 'APD71', 'APD73', 'APD75', 'APD76']
 
 # Python dict of stimuli/triggers association
 stim_trig = {
-    'stim1': 1,
-    'stim2': 2,
-    'stim3': 3,
+    'PPD70': 170,
+    'APD71': 171,
+    'APD73': 173,
+    'APD75': 175,
+    'APD76': 176,
 }
+
+nb_stim = len(play_list)
 
 
 def get_playframe(i_sub):
 
-    # Create the subject specific order. Will be a simple random here.
+    # Create the subject specific order. It will be a simple random here.
     random.shuffle(play_list)
 
     # Get trigger list corresponding to play_list random order
@@ -29,7 +33,7 @@ def get_playframe(i_sub):
 
     # Get ISI corresponding to sequence, in ms, for example with normal
     # distribution around 300ms
-    ISI_list = np.random.normal(300, 25, 3).astype(int)
+    ISI_list = np.random.normal(300, 25, nb_stim).astype(int)
     ISI_list.tolist()
 
     print(play_list)
